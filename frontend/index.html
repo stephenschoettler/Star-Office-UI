@@ -811,7 +811,7 @@
                 const stateText = stateMap[state] || state;
                 const subtitle = `${statusText} · ${stateText}`;
 
-                const pendingActions = `<button onclick='alert(\'Swap skill Feature in Development\')'>Swapskill</button><button class="leave-btn" onclick='leaveGuestAgent(\'${agent.agentId}\',\'${name}\')'>Leave Room</button>`;
+                const pendingActions = `<button class="leave-btn" onclick='leaveGuestAgent(\'${agent.agentId}\',\'${name}\')'>Leave Room</button>`;
 
                 return `
                   <div class="guest-agent-item" data-name="${name}">
@@ -849,7 +849,7 @@
         }
 
         function getAreaPoint(area, idx) {
-            // Non demo Guest: still use fixed position to avoid shaking with each poll.
+            // Non-demo guest: use fixed position to avoid jitter on each poll.
             const map = {
                 breakroom: [
                     { x: 511, y: 262 },
@@ -906,7 +906,7 @@
                     } else if ((agent.name === 'Mercury') && game.textures.exists('guestagent2')) {
                         sprite = game.add.image(p.x, p.y, 'guestagent2').setOrigin(0.5, 1).setScale(1.05);
                     } else {
-                        // Non demo Guest: prioritize animated sprites (guest_anim_x), then static image, fallback star
+                        // Non-demo guest: prioritize animated sprites (guest_anim_x), then static image, fallback star
                         // Determine role index first (1-6)
                         let animIdx = agent.avatar
                             ? parseInt((agent.avatar.match(/_(\d+)$/) || [])[1] || '0', 10)
@@ -1173,7 +1173,7 @@
             return fetch('/agents?t=' + Date.now(), { cache: 'no-store' })
                 .then(response => response.json())
                 .then(data => {
-                    // Regardless of whether the backend returns an array,demo=1 Ensure local demo Visible to Guests
+                    // Regardless of backend array format, ensure local demo agent is visible to guests
                     guestAgents = Array.isArray(data) ? data : [];
 
                     // New guest detection: Triggered Star Welcome Bubble (only welcomes real guests, not demo)

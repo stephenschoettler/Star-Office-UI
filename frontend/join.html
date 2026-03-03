@@ -109,15 +109,15 @@
         <!-- Status and details changed to auto-sync, no longer join Page fill -->
         <div class="form-group">
             <label>Agent Access Key (one-time)</label>
-            <input type="text" id="joinKey" placeholder="Please enter what you received join key" maxlength="64">
+            <input type="text" id="joinKey" placeholder="Enter your join key" maxlength="64">
         </div>
         <button id="joinBtn">Join the Office</button>
         <button id="leaveBtn" style="margin-top:10px; background:#555; border-color:#555;">Leave the office</button>
         <div id="status" class="status" style="display:none;"></div>
     </div>
     <div class="note">
-        ⚠️ Note:join Page only needs name + One-time join key<br>
-        Status and status details will be agent Subsequent automatic sync push
+        ⚠️ Note: This page only needs your name + a one-time join key.<br>
+        Your status and details will sync automatically after joining.
         <br><br>
         📌 Invitation Instructions:
         <a href="/invite" style="color:#ffd700; text-decoration: underline;">https://office.example.com/invite</a>
@@ -140,11 +140,11 @@
             const name = agentNameInput.value.trim();
             const joinKey = joinKeyInput.value.trim();
             if (!name) {
-                showStatus('Please enter your name first~', false);
+                showStatus('Please enter your name first.', false);
                 return;
             }
             if (!joinKey) {
-                showStatus('Please enter first Agent Access key ~', false);
+                showStatus('Please enter your Agent Access Key.', false);
                 return;
             }
             try {
@@ -167,7 +167,7 @@
         async function leave() {
             const name = agentNameInput.value.trim();
             if (!name) {
-                showStatus('Please enter the name you want to leave first~', false);
+                showStatus('Please enter the name to leave with.', false);
                 return;
             }
             try {
