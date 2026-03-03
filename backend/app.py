@@ -219,6 +219,12 @@ if not os.path.exists(STATE_FILE):
     save_state(DEFAULT_STATE)
 
 
+@app.route("/favicon.ico", methods=["GET"])
+def favicon():
+    """Serve the favicon"""
+    return send_from_directory(FRONTEND_DIR, "favicon.ico", mimetype="image/vnd.microsoft.icon")
+
+
 @app.route("/", methods=["GET"])
 def index():
     """Serve the pixel office UI with built-in version cache busting"""
@@ -260,20 +266,6 @@ DEFAULT_AGENTS = [
         "updated_at": datetime.now().isoformat(),
         "area": "breakroom",
         "source": "local",
-        "joinKey": None,
-        "authStatus": "approved",
-        "authExpiresAt": None,
-        "lastPushAt": None
-    },
-    {
-        "agentId": "npc1",
-        "name": "NPC 1",
-        "isMain": False,
-        "state": "writing",
-        "detail": "Organizing hot daily reports...",
-        "updated_at": datetime.now().isoformat(),
-        "area": "writing",
-        "source": "demo",
         "joinKey": None,
         "authStatus": "approved",
         "authExpiresAt": None,
