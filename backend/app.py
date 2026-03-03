@@ -10,7 +10,7 @@ import threading
 
 # Paths (project-relative, no hardcoded absolute paths)
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MEMORY_DIR = os.path.join(os.path.dirname(ROOT_DIR), "memory")
+MEMORY_DIR = os.path.expanduser("~/.openclaw/workspace/memory")
 FRONTEND_DIR = os.path.join(ROOT_DIR, "frontend")
 STATE_FILE = os.path.join(ROOT_DIR, "state.json")
 AGENTS_STATE_FILE = os.path.join(ROOT_DIR, "agents-state.json")
@@ -18,43 +18,43 @@ JOIN_KEYS_FILE = os.path.join(ROOT_DIR, "join-keys.json")
 
 
 def get_yesterday_date_str():
-    """获取昨天的日期字符串 YYYY-MM-DD"""
+    """Get yesterday's date string YYYY-MM-DD"""
     yesterday = datetime.now() - timedelta(days=1)
     return yesterday.strftime("%Y-%m-%d")
 
 
 def sanitize_content(text):
-    """清理内容，保护隐私"""
+    """Clean content, protect privacy"""
     import re
     
-    # 移除 OpenID、User ID 等
-    text = re.sub(r'ou_[a-f0-9]+', '[用户]', text)
-    text = re.sub(r'user_id="[^"]+"', 'user_id="[隐藏]"', text)
+    # Remove OpenID,User ID etc.
+    text = re.sub(r'ou_[a-f0-9]+', '[User]', text)
+    text = re.sub(r'user_id="[^"]+"', 'user_id="[Hide]"', text)
     
-    # 移除具体的人名（如果有的话）
-    # 这里可以根据需要添加更多规则
+    # Remove specific names (if any)
+    # More rules can be added as needed
     
-    # 移除 IP 地址、路径等敏感信息
-    text = re.sub(r'/root/[^"\s]+', '[路径]', text)
+    # Remove IP Sensitive Information like Address, Path, etc.
+    text = re.sub(r'/root/[^"\s]+', '[Path]', text)
     text = re.sub(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', '[IP]', text)
     
-    # 移除电话号码、邮箱等
-    text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[邮箱]', text)
-    text = re.sub(r'1[3-9]\d{9}', '[手机号]', text)
+    # Remove Phone Numbers, Emails, etc.
+    text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[Email]', text)
+    text = re.sub(r'1[3-9]\d{9}', '[Phone Number]', text)
     
     return text
 
 
 def extract_memo_from_file(file_path):
-    """从 memory 文件中提取适合展示的 memo 内容（睿智风格的总结）"""
+    """From memory Extract suitable content for display from file memo Content (Insightful Summary)"""
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        # 提取真实内容，不做过度包装
+        # Extract real content, avoid over-packaging
         lines = content.strip().split("\n")
         
-        # 提取核心要点
+        # Extract Key Points
         core_points = []
         for line in lines:
             line = line.strip()
@@ -68,44 +68,44 @@ def extract_memo_from_file(file_path):
                 core_points.append(line)
         
         if not core_points:
-            return "「昨日无事记录」\n\n若有恒，何必三更眠五更起；最无益，莫过一日曝十日寒。"
+            return "No notes from yesterday\n\nIf persistent, why sleep late and rise early; the least beneficial is sporadic effort."
         
-        # 从核心内容中提取 2-3 个关键点
+        # Extract from Core Content 2-3 Key point
         selected_points = core_points[:3]
         
-        # 睿智语录库
+        # Wise Quotes Library
         wisdom_quotes = [
-            "「工欲善其事，必先利其器。」",
-            "「不积跬步，无以至千里；不积小流，无以成江海。」",
-            "「知行合一，方可致远。」",
-            "「业精于勤，荒于嬉；行成于思，毁于随。」",
-            "「路漫漫其修远兮，吾将上下而求索。」",
-            "「昨夜西风凋碧树，独上高楼，望尽天涯路。」",
-            "「衣带渐宽终不悔，为伊消得人憔悴。」",
-            "「众里寻他千百度，蓦然回首，那人却在，灯火阑珊处。」",
-            "「世事洞明皆学问，人情练达即文章。」",
-            "「纸上得来终觉浅，绝知此事要躬行。」"
+            "To do a good job, one must first sharpen their tools.",
+            "A journey of a thousand miles begins with a single step.",
+            "Knowledge and action must be unified to achieve great things.",
+            "Diligence leads to expertise, neglect to decay; reflection leads to success, carelessness to failure.",
+            "The road is long and winding, I will seek high and low.",
+            "Last night the west wind withered the green trees, I climbed the high tower alone, gazing at the endless road.",
+            "Though my belt grows loose, I do not regret it, for you I become gaunt.",
+            "Searching for him thousands of times, suddenly turning back, there he is, in the dim light.",
+            "Understanding the world is knowledge; understanding people is art.",
+            "Knowledge from books is shallow; true understanding comes from practice."
         ]
         
         import random
         quote = random.choice(wisdom_quotes)
         
-        # 组合内容
+        # Combine Content
         result = []
         
-        # 添加核心内容
+        # Add Core Content
         if selected_points:
             for i, point in enumerate(selected_points):
-                # 隐私清理
+                # Privacy cleanup
                 point = sanitize_content(point)
-                # 截断过长的内容
+                # Truncate overly long content
                 if len(point) > 40:
                     point = point[:37] + "..."
-                # 每行最多 20 字
+                # Max per line 20 Characters
                 if len(point) <= 20:
                     result.append(f"· {point}")
                 else:
-                    # 按 20 字切分
+                    # By 20 Text segmentation
                     for j in range(0, len(point), 20):
                         chunk = point[j:j+20]
                         if j == 0:
@@ -113,7 +113,7 @@ def extract_memo_from_file(file_path):
                         else:
                             result.append(f"  {chunk}")
         
-        # 添加睿智语录
+        # Add wise quotes
         if quote:
             if len(quote) <= 20:
                 result.append(f"\n{quote}")
@@ -128,8 +128,8 @@ def extract_memo_from_file(file_path):
         return "\n".join(result).strip()
         
     except Exception as e:
-        print(f"提取 memo 失败: {e}")
-        return "「昨日记录加载失败」\n\n「往者不可谏，来者犹可追。」"
+        print(f"Extract memo Failure: {e}")
+        return "Failed to load yesterday's notes\n\nThe past is unchangeable, but the future is still within reach."
 
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="/static")
 
@@ -151,7 +151,7 @@ def add_no_cache_headers(response):
 # Default state
 DEFAULT_STATE = {
     "state": "idle",
-    "detail": "等待任务中...",
+    "detail": "Waiting for task...",
     "progress": 0,
     "updated_at": datetime.now().isoformat()
 }
@@ -194,7 +194,7 @@ def load_state():
                 age = (datetime.now() - dt).total_seconds()
             if age > ttl:
                 state["state"] = "idle"
-                state["detail"] = "待命中（自动回到休息区）"
+                state["detail"] = "On Standby (Automatically Returns to Break Room)"
                 state["progress"] = 0
                 state["updated_at"] = datetime.now().isoformat()
                 # persist the auto-idle so every client sees it consistently
@@ -256,7 +256,7 @@ DEFAULT_AGENTS = [
         "name": "Star",
         "isMain": True,
         "state": "idle",
-        "detail": "待命中，随时准备为你服务",
+        "detail": "On standby, ready to serve you anytime",
         "updated_at": datetime.now().isoformat(),
         "area": "breakroom",
         "source": "local",
@@ -270,7 +270,7 @@ DEFAULT_AGENTS = [
         "name": "NPC 1",
         "isMain": False,
         "state": "writing",
-        "detail": "在整理热点日报...",
+        "detail": "Organizing hot daily reports...",
         "updated_at": datetime.now().isoformat(),
         "area": "writing",
         "source": "demo",
@@ -317,9 +317,9 @@ def save_join_keys(data):
 
 
 def normalize_agent_state(s):
-    """归一化状态，提高兼容性。
-    兼容输入：working/busy → writing; run/running → executing; sync → syncing; research → researching.
-    未识别默认返回 idle.
+    """Normalize state to improve compatibility.
+    Compatible input:working/busy -> writing; run/running -> executing; sync -> syncing; research -> researching.
+    Unrecognized Default Return idle.
     """
     if not s:
         return 'idle'
@@ -334,7 +334,7 @@ def normalize_agent_state(s):
         return 'researching'
     if s_lower in {'idle', 'writing', 'researching', 'executing', 'syncing', 'error'}:
         return s_lower
-    # 默认 fallback
+    # Default fallback
     return 'idle'
 
 
@@ -374,7 +374,7 @@ def get_agents():
         auth_expires_at_str = a.get("authExpiresAt")
         auth_status = a.get("authStatus", "pending")
 
-        # 1) 超时未批准自动 leave
+        # 1) Automatically if not approved in time leave
         if auth_status == "pending" and auth_expires_at_str:
             try:
                 auth_expires_at = datetime.fromisoformat(auth_expires_at_str)
@@ -391,13 +391,13 @@ def get_agents():
             except Exception:
                 pass
 
-        # 2) 超时未推送自动离线（超过5分钟）
+        # 2) Auto Offline if Timeout Not Pushed (Exceeds5Minutes)
         last_push_at_str = a.get("lastPushAt")
         if auth_status == "approved" and last_push_at_str:
             try:
                 last_push_at = datetime.fromisoformat(last_push_at_str)
                 age = (now - last_push_at).total_seconds()
-                if age > 300:  # 5分钟无推送自动离线
+                if age > 300:  # 5Auto offline after minutes of no push
                     a["authStatus"] = "offline"
             except Exception:
                 pass
@@ -417,16 +417,16 @@ def agent_approve():
         data = request.get_json()
         agent_id = (data.get("agentId") or "").strip()
         if not agent_id:
-            return jsonify({"ok": False, "msg": "缺少 agentId"}), 400
+            return jsonify({"ok": False, "msg": "Missing agentId"}), 400
 
         agents = load_agents_state()
         target = next((a for a in agents if a.get("agentId") == agent_id and not a.get("isMain")), None)
         if not target:
-            return jsonify({"ok": False, "msg": "未找到 agent"}), 404
+            return jsonify({"ok": False, "msg": "Not found agent"}), 404
 
         target["authStatus"] = "approved"
         target["authApprovedAt"] = datetime.now().isoformat()
-        target["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()  # 默认授权24h
+        target["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()  # Default Authorization24h
 
         save_agents_state(agents)
         return jsonify({"ok": True, "agentId": agent_id, "authStatus": "approved"})
@@ -441,12 +441,12 @@ def agent_reject():
         data = request.get_json()
         agent_id = (data.get("agentId") or "").strip()
         if not agent_id:
-            return jsonify({"ok": False, "msg": "缺少 agentId"}), 400
+            return jsonify({"ok": False, "msg": "Missing agentId"}), 400
 
         agents = load_agents_state()
         target = next((a for a in agents if a.get("agentId") == agent_id and not a.get("isMain")), None)
         if not target:
-            return jsonify({"ok": False, "msg": "未找到 agent"}), 404
+            return jsonify({"ok": False, "msg": "Not found agent"}), 404
 
         target["authStatus"] = "rejected"
         target["authRejectedAt"] = datetime.now().isoformat()
@@ -478,7 +478,7 @@ def join_agent():
     try:
         data = request.get_json()
         if not isinstance(data, dict) or not data.get("name"):
-            return jsonify({"ok": False, "msg": "请提供名字"}), 400
+            return jsonify({"ok": False, "msg": "Please provide a name"}), 400
 
         name = data["name"].strip()
         state = data.get("state", "idle")
@@ -489,25 +489,25 @@ def join_agent():
         state = normalize_agent_state(state)
 
         if not join_key:
-            return jsonify({"ok": False, "msg": "请提供接入密钥"}), 400
+            return jsonify({"ok": False, "msg": "Please provide access key"}), 400
 
         keys_data = load_join_keys()
         key_item = next((k for k in keys_data.get("keys", []) if k.get("key") == join_key), None)
         if not key_item:
-            return jsonify({"ok": False, "msg": "接入密钥无效"}), 403
-        # key 可复用：不再因为 used=true 拒绝
+            return jsonify({"ok": False, "msg": "Invalid access key"}), 403
+        # key Reusable: No longer because used=true Reject
 
         with join_lock:
-            # 在锁内重新读取，避免并发请求都基于同一旧快照通过校验
+            # Re-read within lock to avoid concurrent requests based on the same old snapshot passing validation
             keys_data = load_join_keys()
             key_item = next((k for k in keys_data.get("keys", []) if k.get("key") == join_key), None)
             if not key_item:
-                return jsonify({"ok": False, "msg": "接入密钥无效"}), 403
+                return jsonify({"ok": False, "msg": "Invalid access key"}), 403
 
             agents = load_agents_state()
 
-            # 并发上限：同一个 key “同时在线”最多 3 个。
-            # 在线判定：lastPushAt/updated_at 在 5 分钟内；否则视为 offline，不计入并发。
+            # Concurrency limit: same key Online simultaneouslyAt Most 3 pieces.
+            # Online determination:lastPushAt/updated_at At 5 minutes; otherwise considered offline, not counted in concurrency.
             now = datetime.now()
             existing = next((a for a in agents if a.get("name") == name and not a.get("isMain")), None)
             existing_id = existing.get("agentId") if existing else None
@@ -552,7 +552,7 @@ def join_agent():
 
             if active_count >= max_concurrent:
                 save_agents_state(agents)
-                return jsonify({"ok": False, "msg": f"该接入密钥当前并发已达上限（{max_concurrent}），请稍后或换另一个 key"}), 429
+                return jsonify({"ok": False, "msg": f"This access key has reached current concurrency limit ({max_concurrent}), please try later or choose another key"}), 429
 
             if existing:
                 existing["state"] = state
@@ -564,7 +564,7 @@ def join_agent():
                 existing["authStatus"] = "approved"
                 existing["authApprovedAt"] = datetime.now().isoformat()
                 existing["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()
-                existing["lastPushAt"] = datetime.now().isoformat()  # join 视为上线，纳入并发/离线判定
+                existing["lastPushAt"] = datetime.now().isoformat()  # join Considered online, included in concurrency/Offline detection
                 if not existing.get("avatar"):
                     import random
                     existing["avatar"] = random.choice(["guest_role_1", "guest_role_2", "guest_role_3", "guest_role_4", "guest_role_5", "guest_role_6"])
@@ -597,12 +597,12 @@ def join_agent():
             key_item["usedAt"] = datetime.now().isoformat()
             key_item["reusable"] = True
 
-            # 拿到有效 key 直接批准，不再等待主人手动点击
-            # （状态已在上面 existing/new 分支写入）
+            # Obtain valid key Direct approval, no longer waiting for user manual click
+            # (Status Already Above existing/new Branch write)
             save_agents_state(agents)
             save_join_keys(keys_data)
 
-        return jsonify({"ok": True, "agentId": agent_id, "authStatus": "approved", "nextStep": "已自动批准，立即开始推送状态"})
+        return jsonify({"ok": True, "agentId": agent_id, "authStatus": "approved", "nextStep": "Automatically approved, start pushing status immediately"})
     except Exception as e:
         return jsonify({"ok": False, "msg": str(e)}), 500
 
@@ -621,7 +621,7 @@ def leave_agent():
         agent_id = (data.get("agentId") or "").strip()
         name = (data.get("name") or "").strip()
         if not agent_id and not name:
-            return jsonify({"ok": False, "msg": "请提供 agentId 或名字"}), 400
+            return jsonify({"ok": False, "msg": "Please provide agentId Or name"}), 400
 
         agents = load_agents_state()
 
@@ -633,7 +633,7 @@ def leave_agent():
             target = next((a for a in agents if a.get("name") == name and not a.get("isMain")), None)
 
         if not target:
-            return jsonify({"ok": False, "msg": "没有找到要离开的 agent"}), 404
+            return jsonify({"ok": False, "msg": "Did not find the one to leave agent"}), 404
 
         join_key = target.get("joinKey")
         new_agents = [a for a in agents if a.get("isMain") or a.get("agentId") != target.get("agentId")]
@@ -686,7 +686,7 @@ def agent_push():
         name = (data.get("name") or "").strip()
 
         if not agent_id or not join_key or not state:
-            return jsonify({"ok": False, "msg": "缺少 agentId/joinKey/state"}), 400
+            return jsonify({"ok": False, "msg": "Missing agentId/joinKey/state"}), 400
 
         valid_states = {"idle", "writing", "researching", "executing", "syncing", "error"}
         state = normalize_agent_state(state)
@@ -694,28 +694,28 @@ def agent_push():
         keys_data = load_join_keys()
         key_item = next((k for k in keys_data.get("keys", []) if k.get("key") == join_key), None)
         if not key_item:
-            return jsonify({"ok": False, "msg": "joinKey 无效"}), 403
-        # key 可复用：不再做 used/usedByAgentId 绑定校验
+            return jsonify({"ok": False, "msg": "joinKey Invalid"}), 403
+        # key Reusable: No longer needed used/usedByAgentId Bind verification
 
 
         agents = load_agents_state()
         target = next((a for a in agents if a.get("agentId") == agent_id and not a.get("isMain")), None)
         if not target:
-            return jsonify({"ok": False, "msg": "agent 未注册，请先 join"}), 404
+            return jsonify({"ok": False, "msg": "agent Not Registered, Please join"}), 404
 
         # Auth check: only approved agents can push.
         # Note: "offline" is a presence state (stale), not a revoked authorization.
         # Allow offline agents to resume pushing and auto-promote them back to approved.
         auth_status = target.get("authStatus", "pending")
         if auth_status not in {"approved", "offline"}:
-            return jsonify({"ok": False, "msg": "agent 未获授权，请等待主人批准"}), 403
+            return jsonify({"ok": False, "msg": "agent Unauthorized, please wait for user approval"}), 403
         if auth_status == "offline":
             target["authStatus"] = "approved"
             target["authApprovedAt"] = datetime.now().isoformat()
             target["authExpiresAt"] = (datetime.now() + timedelta(hours=24)).isoformat()
 
         if target.get("joinKey") != join_key:
-            return jsonify({"ok": False, "msg": "joinKey 不匹配"}), 403
+            return jsonify({"ok": False, "msg": "joinKey Mismatch"}), 403
 
         target["state"] = state
         target["detail"] = detail
@@ -740,9 +740,9 @@ def health():
 
 @app.route("/yesterday-memo", methods=["GET"])
 def get_yesterday_memo():
-    """获取昨日小日记"""
+    """Fetch Yesterday's Notes"""
     try:
-        # 先尝试找昨天的文件
+        # Try finding yesterday's file first
         yesterday_str = get_yesterday_date_str()
         yesterday_file = os.path.join(MEMORY_DIR, f"{yesterday_str}.md")
         
@@ -752,12 +752,12 @@ def get_yesterday_memo():
         if os.path.exists(yesterday_file):
             target_file = yesterday_file
         else:
-            # 如果昨天没有，找最近的一天
+            # If not found yesterday, find the nearest day
             if os.path.exists(MEMORY_DIR):
                 files = [f for f in os.listdir(MEMORY_DIR) if f.endswith(".md") and re.match(r"\d{4}-\d{2}-\d{2}\.md", f)]
                 if files:
                     files.sort(reverse=True)
-                    # 跳过今天的（如果存在）
+                    # Skip today's (if exists)
                     today_str = datetime.now().strftime("%Y-%m-%d")
                     for f in files:
                         if f != f"{today_str}.md":
@@ -775,7 +775,7 @@ def get_yesterday_memo():
         else:
             return jsonify({
                 "success": False,
-                "msg": "没有找到昨日日记"
+                "msg": "Yesterday's Notes Not Found"
             })
     except Exception as e:
         return jsonify({
@@ -814,4 +814,4 @@ if __name__ == "__main__":
     print("Listening on: http://0.0.0.0:18791")
     print("=" * 50)
     
-    app.run(host="0.0.0.0", port=18791, debug=False)
+    app.run(host="0.0.0.0", port=18793, debug=False)

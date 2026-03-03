@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-海辛办公室 - Agent 状态主动推送脚本
+Star's Office - Agent State Active Push Script
 
-用法：
-1. 填入下面的 JOIN_KEY（你从海辛那里拿到的一次性 join key）
-2. 填入 AGENT_NAME（你想要在办公室里显示的名字）
-3. 运行：python office-agent-push.py
-4. 脚本会自动先 join（首次运行），然后每 30s 向海辛办公室推送一次你的当前状态
+Usage:
+1. Fill in below JOIN_KEY(One-time from Star join key)
+2. Fill in AGENT_NAME(Name you want to display in the office)
+3. Run:python office-agent-push.py
+4. The script will automatically first join(First Run), then every 30s Push your current status to Star's office once
 """
 
 import json
@@ -15,22 +15,22 @@ import time
 import sys
 from datetime import datetime
 
-# === 你需要填入的信息 ===
-JOIN_KEY = ""   # 必填：你的一次性 join key
-AGENT_NAME = "" # 必填：你在办公室里的名字
-OFFICE_URL = "https://office.example.com"  # 海辛办公室地址（一般不用改）
+# === Information you need to fill in ===
+JOIN_KEY = ""   # Required: Your one-time join key
+AGENT_NAME = "" # Required: Your name in the office
+OFFICE_URL = "https://office.example.com"  # Star's office address (usually no need to change)
 
-# === 推送配置 ===
-PUSH_INTERVAL_SECONDS = 15  # 每隔多少秒推送一次（更实时）
+# === Push configuration ===
+PUSH_INTERVAL_SECONDS = 15  # Push every few seconds (more real-time)
 STATUS_ENDPOINT = "/status"
 JOIN_ENDPOINT = "/join-agent"
 PUSH_ENDPOINT = "/agent-push"
 
-# 本地状态存储（记住上次 join 拿到的 agentId）
+# Local State Storage (remember last join Obtained agentId)
 STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "office-agent-state.json")
 
-# 优先读取本机 OpenClaw 工作区的状态文件（更贴合 AGENTS.md 的工作流）
-# 支持自动发现，减少对方手动配置成本。
+# Prioritize local read OpenClaw Workspace status file (more fitting AGENTS.md Workflow)
+# Support auto-discovery to reduce manual configuration cost for others.
 DEFAULT_STATE_CANDIDATES = [
     "/root/.openclaw/workspace/star-office-ui/state.json",
     "/root/.openclaw/workspace/state.json",
@@ -38,10 +38,10 @@ DEFAULT_STATE_CANDIDATES = [
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "state.json"),
 ]
 
-# 如果对方本地 /status 需要鉴权，可在这里填写 token（或通过环境变量 OFFICE_LOCAL_STATUS_TOKEN）
+# If local /status Authentication required, fill in here token(Or via environment variables OFFICE_LOCAL_STATUS_TOKEN)
 LOCAL_STATUS_TOKEN = os.environ.get("OFFICE_LOCAL_STATUS_TOKEN", "")
 LOCAL_STATUS_URL = os.environ.get("OFFICE_LOCAL_STATUS_URL", "http://127.0.0.1:18791/status")
-# 可选：直接指定本地状态文件路径（最简单方案：绕过 /status 鉴权）
+# Optional: Directly specify local state file path (simplest solution: bypass /status Authentication)
 LOCAL_STATE_FILE = os.environ.get("OFFICE_LOCAL_STATE_FILE", "")
 VERBOSE = os.environ.get("OFFICE_VERBOSE", "0") in {"1", "true", "TRUE", "yes", "YES"}
 
@@ -67,7 +67,7 @@ def save_local_state(data):
 
 
 def normalize_state(s):
-    """兼容不同本地状态词，并映射到办公室识别状态。"""
+    """Compatible with different local state terms and map to office recognized states."""
     s = (s or "").strip().lower()
     if s in {"writing", "researching", "executing", "syncing", "error", "idle"}:
         return s
@@ -83,28 +83,28 @@ def normalize_state(s):
 
 
 def map_detail_to_state(detail, fallback_state="idle"):
-    """当只有 detail 时，用关键词推断状态（贴近 AGENTS.md 的办公区逻辑）。"""
+    """When only detail When using keywords to infer status (close to AGENTS.md Office area logic)."""
     d = (detail or "").lower()
-    if any(k in d for k in ["报错", "error", "bug", "异常", "报警"]):
+    if any(k in d for k in ["Error", "error", "bug", "Exception", "Alert"]):
         return "error"
-    if any(k in d for k in ["同步", "sync", "备份"]):
+    if any(k in d for k in ["Sync", "sync", "Backup"]):
         return "syncing"
-    if any(k in d for k in ["调研", "research", "搜索", "查资料"]):
+    if any(k in d for k in ["Research", "research", "Search", "Research"]):
         return "researching"
-    if any(k in d for k in ["执行", "run", "推进", "处理任务", "工作中", "writing"]):
+    if any(k in d for k in ["Execute", "run", "Advance", "Process task", "Working", "writing"]):
         return "writing"
-    if any(k in d for k in ["待命", "休息", "idle", "完成", "done"]):
+    if any(k in d for k in ["Standby", "Break", "idle", "Complete", "done"]):
         return "idle"
     return fallback_state
 
 
 def fetch_local_status():
-    """读取本地状态：
-    1) 优先 state.json（符合 AGENTS.md：任务前切 writing，完成后切 idle）
-    2) 其次尝试本地 HTTP /status
-    3) 最后 fallback idle
+    """Read local state:
+    1) Priority state.json(Complies with AGENTS.md: Before task cut writing, switch after completion idle)
+    2) Then try local HTTP /status
+    3) Finally fallback idle
     """
-    # 1) 读本地 state.json（优先读取显式指定路径，其次自动发现）
+    # 1) Read local state.json(Prioritize reading explicitly specified paths, then auto-discover)
     candidate_files = []
     if LOCAL_STATE_FILE:
         candidate_files.append(LOCAL_STATE_FILE)
@@ -118,7 +118,7 @@ def fetch_local_status():
                 with open(fp, "r", encoding="utf-8") as f:
                     data = json.load(f)
 
-                    # 只接受“状态文件”结构；避免误把 office-agent-state.json（仅缓存 agentId）当状态源
+                    # Only Accept“Status File”Structure; avoid mistakenly office-agent-state.json(Cache only agentId) When Status Source
                     if not isinstance(data, dict):
                         continue
                     has_state = "state" in data
@@ -128,7 +128,7 @@ def fetch_local_status():
 
                     state = normalize_state(data.get("state", "idle"))
                     detail = data.get("detail", "") or ""
-                    # detail 兜底纠偏，确保“工作/休息/报警”能正确落区
+                    # detail Fallback correction, ensure“Work/Break/Alert”Can correctly land in zone
                     state = map_detail_to_state(detail, fallback_state=state)
                     if VERBOSE:
                         print(f"[status-source:file] path={fp} state={state} detail={detail[:60]}")
@@ -136,7 +136,7 @@ def fetch_local_status():
         except Exception:
             pass
 
-    # 2) 尝试本地 /status（可能需要鉴权）
+    # 2) Try locally /status(May require authentication)
     try:
         import requests
         headers = {}
@@ -151,16 +151,16 @@ def fetch_local_status():
             if VERBOSE:
                 print(f"[status-source:http] url={LOCAL_STATUS_URL} state={state} detail={detail[:60]}")
             return {"state": state, "detail": detail}
-        # 如果 401，说明需要 token
+        # If 401, indicates need token
         if r.status_code == 401:
-            return {"state": "idle", "detail": "本地/status需要鉴权（401），请设置 OFFICE_LOCAL_STATUS_TOKEN"}
+            return {"state": "idle", "detail": "Local/statusRequires authentication (401), please set OFFICE_LOCAL_STATUS_TOKEN"}
     except Exception:
         pass
 
-    # 3) 默认 fallback
+    # 3) Default fallback
     if VERBOSE:
-        print("[status-source:fallback] state=idle detail=待命中")
-    return {"state": "idle", "detail": "待命中"}
+        print("[status-source:fallback] state=idle detail=On Standby")
+    return {"state": "idle", "detail": "On Standby"}
 
 
 def do_join(local):
@@ -169,7 +169,7 @@ def do_join(local):
         "name": local.get("agentName", AGENT_NAME),
         "joinKey": local.get("joinKey", JOIN_KEY),
         "state": "idle",
-        "detail": "刚刚加入"
+        "detail": "Just Joined"
     }
     r = requests.post(f"{OFFICE_URL}{JOIN_ENDPOINT}", json=payload, timeout=10)
     if r.status_code in (200, 201):
@@ -178,9 +178,9 @@ def do_join(local):
             local["joined"] = True
             local["agentId"] = data.get("agentId")
             save_local_state(local)
-            print(f"✅ 已加入海辛办公室，agentId={local['agentId']}")
+            print(f"✅ Joined Star's office,agentId={local['agentId']}")
             return True
-    print(f"❌ 加入失败：{r.text}")
+    print(f"❌ Join failed:{r.text}")
     return False
 
 
@@ -198,54 +198,54 @@ def do_push(local, status_data):
         data = r.json()
         if data.get("ok"):
             area = data.get("area", "breakroom")
-            print(f"✅ 状态已同步，当前区域={area}")
+            print(f"✅ Status synced, current area={area}")
             return True
 
-    # 403/404：拒绝/移除 → 停止推送
+    # 403/404: Deny/Remove → Stop push
     if r.status_code in (403, 404):
         msg = ""
         try:
             msg = (r.json() or {}).get("msg", "")
         except Exception:
             msg = r.text
-        print(f"⚠️  访问拒绝或已移出房间（{r.status_code}），停止推送：{msg}")
+        print(f"⚠️  Access denied or removed from room ({r.status_code}), stop push:{msg}")
         local["joined"] = False
         local["agentId"] = None
         save_local_state(local)
         sys.exit(1)
 
-    print(f"⚠️  推送失败：{r.text}")
+    print(f"⚠️  Push failed:{r.text}")
     return False
 
 
 def main():
     local = load_local_state()
 
-    # 先确认配置是否齐全
+    # First confirm if the configuration is complete
     if not JOIN_KEY or not AGENT_NAME:
-        print("❌ 请先在脚本开头填入 JOIN_KEY 和 AGENT_NAME")
+        print("❌ Please fill in at the beginning of the script JOIN_KEY and AGENT_NAME")
         sys.exit(1)
 
-    # 如果之前没 join，先 join
+    # If not before join, first join
     if not local.get("joined") or not local.get("agentId"):
         ok = do_join(local)
         if not ok:
             sys.exit(1)
 
-    # 持续推送
-    print(f"🚀 开始持续推送状态，间隔={PUSH_INTERVAL_SECONDS}秒")
-    print("🧭 状态逻辑：任务中→工作区；待命/完成→休息区；异常→bug区")
-    print("🔐 若本地 /status 返回 Unauthorized(401)，请设置环境变量：OFFICE_LOCAL_STATUS_TOKEN 或 OFFICE_LOCAL_STATUS_URL")
+    # Continuous Push
+    print(f"🚀 Start continuous status push, interval={PUSH_INTERVAL_SECONDS}Seconds")
+    print("🧭 Status logic: In task→Workspace; Standby/Complete→Break Room; Error→bugZone")
+    print("🔐 If local /status Return Unauthorized(401), please set environment variable:OFFICE_LOCAL_STATUS_TOKEN Or OFFICE_LOCAL_STATUS_URL")
     try:
         while True:
             try:
                 status_data = fetch_local_status()
                 do_push(local, status_data)
             except Exception as e:
-                print(f"⚠️  推送异常：{e}")
+                print(f"⚠️  Push exception:{e}")
             time.sleep(PUSH_INTERVAL_SECONDS)
     except KeyboardInterrupt:
-        print("\n👋 停止推送")
+        print("\n👋 Stop push")
         sys.exit(0)
 
 
