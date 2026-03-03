@@ -5,15 +5,20 @@
       "name": "Team Member 01",
       "maxConcurrent": 3,
       "used": true,
-      "usedBy": "A Lobster",
-      "usedByAgentId": "agent_1772347959385_px4w",
-      "usedAt": "2026-03-01T14:52:39.385922",
+      "usedBy": "Code Monkey",
+      "usedByAgentId": "agent_1772506600045_05h9",
+      "usedAt": "2026-03-02T18:56:40.045554",
       "reusable": true
     },
     {
       "key": "ocj_starteam02",
       "name": "Team Member 02",
-      "maxConcurrent": 3
+      "maxConcurrent": 3,
+      "used": true,
+      "usedBy": "Maya",
+      "usedByAgentId": "agent_1772506600059_22su",
+      "usedAt": "2026-03-02T18:56:40.059279",
+      "reusable": true
     },
     {
       "key": "ocj_starteam03",
